@@ -1,0 +1,27 @@
+{
+  "helpers": [
+    {
+      "id": "h1",
+      "name": "<ruby>管理者<rt>かんりしゃ</rt></ruby> サンプル"
+    }
+  ],
+  "users": [
+    {
+      "id": "u1",
+      "name": "<ruby>利用者<rt>りようしゃ</rt></ruby> サンプル",
+      "kana": "りようしゃ さんぷる",
+      "email": "sample@example.com"
+    }
+  ],
+  "templates": [
+    {
+      "id": "t1",
+      "title": "【身体介護】入浴・排泄",
+      "content": "■入浴介助\n・バイタルチェック：異常なし\n・全身清拭・洗髪\n■排泄介助\n・オムツ交換：あり\n特記事項：特になし",
+      "category": "kaeru"
+    }
+  ],
+  "schedules": [],
+  "specificSchedules": {},
+  "records": []
+}

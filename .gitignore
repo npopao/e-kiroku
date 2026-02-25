@@ -1,0 +1,12 @@
+# Temporary and generated files
+.gemini/
+.agent/
+.agents/
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+
+# Workspace settings
+.vscode/
+*.code-workspace
