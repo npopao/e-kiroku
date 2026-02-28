@@ -156,8 +156,8 @@ class App {
     if (this.btnLogout) this.btnLogout.onclick = () => { if (confirm('ログアウトしますか？')) this.logout(); };
     if (this.btnToggleRubi) this.btnToggleRubi.onclick = () => this.toggleRubi();
     this.mainContent.onclick = (e) => {
-      if (e.target.closest('.btn-edit-record')) this.editRecord(e.target.closest('.btn-edit-record').dataset.id);
       if (e.target.closest('.btn-delete-record')) this.deleteRecord(e.target.closest('.btn-delete-record').dataset.id);
+      if (e.target.closest('#btn-close-qr')) this.closeQRScanner();
     };
   }
 
@@ -167,10 +167,8 @@ class App {
   }
 
   login(name, email) {
-    const strippedName = this.stripRubi(name).replace(/\s+/g, '').trim();
     const cleanEmail = email.trim().toLowerCase();
     const helper = this.helpers.find(h =>
-      this.stripRubi(h.name).replace(/\s+/g, '').trim() === strippedName &&
       (h.email || '').trim().toLowerCase() === cleanEmail
     );
     if (helper) {
@@ -258,6 +256,76 @@ class App {
     if (!this.appEl) return;
     this.appEl.classList.toggle('hide-rubi', !this.isRubiVisible);
     if (this.btnToggleRubi) this.btnToggleRubi.textContent = `ルビ: ${this.isRubiVisible ? 'ON' : 'OFF'}`;
+  }
+
+  startQRScanner() {
+    const qrModal = document.getElementById('qr-modal');
+    if (!qrModal) return;
+    qrModal.style.display = 'flex';
+
+    if (this.html5QrcodeScanner) {
+      this.html5QrcodeScanner.clear();
+    }
+
+    // Initialize html5-qrcode
+    this.html5QrcodeScanner = new Html5Qrcode("qr-reader");
+    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+
+    this.html5QrcodeScanner.start(
+      { facingMode: "environment" },
+      config,
+      (decodedText, decodedResult) => {
+        // Success callback
+        console.log(`Scan result: ${decodedText}`);
+        this.handleQRScanResult(decodedText);
+      },
+      (errorMessage) => {
+        // Error callback (ignore frequent frame errors)
+      }
+    ).catch((err) => {
+      console.error("Failed to start scanner:", err);
+      alert("カメラの起動に失敗しました。権限を確認してください。");
+      this.closeQRScanner();
+    });
+  }
+
+  closeQRScanner() {
+    const qrModal = document.getElementById('qr-modal');
+    if (qrModal) qrModal.style.display = 'none';
+    if (this.html5QrcodeScanner) {
+      this.html5QrcodeScanner.stop().then(() => {
+        this.html5QrcodeScanner.clear();
+      }).catch(err => console.error("Failed to stop scanner:", err));
+    }
+  }
+
+  handleQRScanResult(text) {
+    // Expected format: "user:u1"
+    if (text.startsWith('user:')) {
+      const userId = text.split(':')[1];
+      const userSelect = document.getElementById('f-user');
+      if (userSelect) {
+        // Check if user exists in the select options
+        const optionExists = Array.from(userSelect.options).some(opt => opt.value === userId);
+        if (optionExists) {
+          userSelect.value = userId;
+          this.closeQRScanner();
+          this.showToast('利用者を読み込みました。');
+          // Add "Service Started" boilerplate string to content
+          const contentArea = document.getElementById('f-content');
+          if (contentArea) {
+            const startStr = "【サービス開始】";
+            if (!contentArea.value.includes(startStr)) {
+              contentArea.value = startStr + (contentArea.value ? '\n' + contentArea.value : "");
+            }
+          }
+        } else {
+          alert('該当する利用者がシステムに登録されていません。');
+        }
+      }
+    } else {
+      alert('未対応のQRコード形式です: ' + text);
+    }
   }
 
   stripRubi(html) {
@@ -424,6 +492,12 @@ class App {
     `).join('');
 
     div.innerHTML = `<h2>${this.editingRecordId ? '記録の編集' : '新規記録'}</h2>
+      <div style="margin-bottom:var(--spacing-4);">
+        <button type="button" id="btn-open-qr" class="btn" style="width:100%; background:var(--secondary-color); color:white; display:flex; justify-content:center; align-items:center; gap:8px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h6v6H3z"/><path d="M15 3h6v6h-6z"/><path d="M3 15h6v6H3z"/><path d="M21 21v-6h-6v6h6z"/><path d="M9 3v6H3V3h6m2-2H1v10h10V1zm12 0h-10v10h10V1zM9 15v6H3v-6h6m2-2H1v10h10v-10zm12 0h-10v10h10v-10z"/></svg>
+          QRコードで利用者を読み取る
+        </button>
+      </div>
       <form id="record-form" class="card" style="padding:15px;">
         <div class="form-group"><label class="form-label">日時</label>
           <input type="datetime-local" id="f-datetime" class="form-control" value="${prefill.datetime}" required>
@@ -459,6 +533,12 @@ class App {
     setTimeout(() => {
       const templateList = div.querySelector('#template-list');
       const contentArea = div.querySelector('#f-content');
+      const btnOpenQR = div.querySelector('#btn-open-qr');
+
+      if (btnOpenQR) {
+        btnOpenQR.onclick = () => this.startQRScanner();
+      }
+
       const renderTs = (cat) => {
         templateList.innerHTML = this.customTemplates.filter(t => t.category === cat).map(t => `
             <div class="template-chip" data-content="${t.content}" style="display:flex; flex-direction:column; align-items:flex-start; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:white;">

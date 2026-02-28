@@ -213,6 +213,14 @@ class AdminApp {
         document.getElementById('btn-import-users').onchange = (e) => this.importCSV(e, 'users');
         document.getElementById('btn-import-helpers').onchange = (e) => this.importCSV(e, 'helpers');
 
+        // QR Print Events
+        const btnCloseQrModal = document.getElementById('btn-close-qr-modal');
+        if (btnCloseQrModal) {
+            btnCloseQrModal.onclick = () => {
+                document.getElementById('qr-print-modal').style.display = 'none';
+            }
+        }
+
         // Data Sync Events
         window.addEventListener('storage', (e) => {
             if (e.key === 'ekiroku_data_updated') {
@@ -687,8 +695,17 @@ class AdminApp {
     async handleListClick(e, type) {
         const btnDelete = e.target.closest('.delete-btn');
         const btnEdit = e.target.closest('.edit-btn');
-        if (!btnDelete && !btnEdit) return;
-        const id = (btnDelete || btnEdit).dataset.id;
+        const btnQr = e.target.closest('.qr-btn');
+
+        if (!btnDelete && !btnEdit && !btnQr) return;
+
+        const id = (btnDelete || btnEdit || btnQr).dataset.id;
+
+        if (btnQr && type === 'user') {
+            this.showUserQrModal(id);
+            return;
+        }
+
         if (btnDelete) {
             if (!confirm('削除しますか？')) return;
             const table = type === 'schedule' ? 'schedules' : type === 'user' ? 'users' : type === 'helper' ? 'helpers' : 'templates';
@@ -720,6 +737,28 @@ class AdminApp {
                 document.getElementById('btn-save-template').textContent = '更新する';
             }
         }
+    }
+
+    showUserQrModal(userId) {
+        const u = this.users.find(x => x.id === userId);
+        if (!u) return;
+
+        document.getElementById('qr-user-name').textContent = this.stripRubi(u.name);
+
+        const container = document.getElementById('qr-code-container');
+        container.innerHTML = ''; // clear previous
+
+        // Generate QR code with format "user:<ID>"
+        new QRCode(container, {
+            text: `user:${u.id}`,
+            width: 256,
+            height: 256,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        document.getElementById('qr-print-modal').style.display = 'flex';
     }
 
     renderAll() {
@@ -814,6 +853,7 @@ class AdminApp {
             <div class="schedule-card">
                 <div><div style="font-weight:600;">${u.name}</div><div style="font-size:0.8rem;color:var(--text-muted);">${u.email || 'メール未設定'}</div></div>
                 <div style="display:flex;gap:4px;">
+                    <button class="btn qr-btn" data-id="${u.id}" style="padding:4px 8px;font-size:0.7rem;background:#10b981;color:white;width:auto;" title="QRコード表示"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:-2px;"><path d="M3 3h6v6H3z"/><path d="M15 3h6v6h-6z"/><path d="M3 15h6v6H3z"/><path d="M21 21v-6h-6v6h6z"/><path d="M9 3v6H3V3h6m2-2H1v10h10V1zm12 0h-10v10h10V1zM9 15v6H3v-6h6m2-2H1v10h10v-10zm12 0h-10v10h10v-10z"/></svg></button>
                     <button class="btn edit-btn" data-id="${u.id}" style="padding:4px 8px;font-size:0.7rem;background:var(--primary-color);color:white;width:auto;">編集</button>
                     <button class="btn delete-btn" data-id="${u.id}" style="padding:4px 8px;font-size:0.7rem;background:#ef4444;color:white;width:auto;">削除</button>
                 </div>
