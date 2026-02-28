@@ -167,10 +167,16 @@ class App {
   }
 
   login(name, email) {
+    const strippedName = this.stripRubi(name).replace(/\s+/g, '');
     const cleanEmail = email.trim().toLowerCase();
-    const helper = this.helpers.find(h =>
-      (h.email || '').trim().toLowerCase() === cleanEmail
-    );
+
+    const helper = this.helpers.find(h => {
+      const hName = this.stripRubi(h.name).replace(/\s+/g, '');
+      const hEmail = (h.email || '').trim().toLowerCase();
+      // 名前が一致し、かつ（メールが入力されていれば一致する、メールが空の場合は名前のみで許可するかどうかだが、念のため両方一致を条件とする）
+      return hName === strippedName && hEmail === cleanEmail;
+    });
+
     if (helper) {
       this.currentHelper = helper;
       localStorage.setItem('ekiroku_current_helper', JSON.stringify(helper));
