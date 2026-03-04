@@ -851,8 +851,16 @@ class AdminApp {
     renderUsers() {
         this.userListEl.innerHTML = this.users.map(u => `
             <div class="schedule-card">
-                <div><div style="font-weight:600;">${u.name}</div><div style="font-size:0.8rem;color:var(--text-muted);">${u.email || 'メール未設定'}</div></div>
-                <div style="display:flex;gap:4px;">
+                <div style="flex:1;">
+                    <div style="font-weight:600;">${u.name}</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);">${u.email || 'メール未設定'}</div>
+                    <div style="margin-top:4px; display:flex; gap:4px; flex-wrap:wrap;">
+                        ${u.isCare ? '<span style="background:#3b82f6;color:white;font-size:0.65rem;padding:1px 6px;border-radius:999px;">介護あり</span>' : '<span style="background:#e2e8f0;color:#64748b;font-size:0.65rem;padding:1px 6px;border-radius:999px;">介護なし</span>'}
+                        ${u.is3rd ? '<span style="background:#f59e0b;color:white;font-size:0.65rem;padding:1px 6px;border-radius:999px;">3級</span>' : ''}
+                        ${u.isDouble ? '<span style="background:#8b5cf6;color:white;font-size:0.65rem;padding:1px 6px;border-radius:999px;">2人対応</span>' : ''}
+                    </div>
+                </div>
+                <div style="display:flex;gap:4px;align-items:flex-start;">
                     <button class="btn qr-btn" data-id="${u.id}" style="padding:4px 8px;font-size:0.7rem;background:#10b981;color:white;width:auto;" title="QRコード表示"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:-2px;"><path d="M3 3h6v6H3z"/><path d="M15 3h6v6h-6z"/><path d="M3 15h6v6H3z"/><path d="M21 21v-6h-6v6h6z"/><path d="M9 3v6H3V3h6m2-2H1v10h10V1zm12 0h-10v10h10V1zM9 15v6H3v-6h6m2-2H1v10h10v-10zm12 0h-10v10h10v-10z"/></svg></button>
                     <button class="btn edit-btn" data-id="${u.id}" style="padding:4px 8px;font-size:0.7rem;background:var(--primary-color);color:white;width:auto;">編集</button>
                     <button class="btn delete-btn" data-id="${u.id}" style="padding:4px 8px;font-size:0.7rem;background:#ef4444;color:white;width:auto;">削除</button>
