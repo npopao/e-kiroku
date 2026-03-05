@@ -77,7 +77,9 @@ class AdminApp {
             this.helpers = h || [];
             this.users = u.map(x => ({
                 ...x,
-                isCare: x.is_care, is3rd: x.is_3rd, isDouble: x.is_double
+                isCare: !!x.is_care,
+                is3rd: !!x.is_3rd,
+                isDouble: !!x.is_double
             })) || [];
             this.notifications = n || [];
             this.templates = t || [];
@@ -384,13 +386,17 @@ class AdminApp {
 
     async handleUserSubmit(e) {
         e.preventDefault();
-        const name = document.getElementById('u-name').value;
-        const email = document.getElementById('u-email').value;
+        const nameEl = document.getElementById('u-name');
+        const emailEl = document.getElementById('u-email');
+        if (!nameEl) return;
+
+        const name = nameEl.value;
+        const email = emailEl ? emailEl.value : '';
         const payload = {
             name, email, kana: this.stripRubi(name),
-            is_care: this.uIsCare.checked,
-            is_3rd: this.uIs3rd.checked,
-            is_double: this.uIsDouble.checked
+            is_care: this.uIsCare ? !!this.uIsCare.checked : false,
+            is_3rd: this.uIs3rd ? !!this.uIs3rd.checked : false,
+            is_double: this.uIsDouble ? !!this.uIsDouble.checked : false
         };
 
         try {
